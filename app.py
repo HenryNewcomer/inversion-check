@@ -5,8 +5,8 @@ import argparse
 import decimal
 
 min = 0
-max = 100 # TODO: Change to 20,000
-decimal_limit = 40
+max = 100 # TODO: Change to 20_000
+decimal_limit = 10
 
 # Terminal foreground colors
 red     = "\033[31m"
@@ -22,16 +22,26 @@ def get_inversion(num_to_check):
     # Set the precision to a higher value to avoid floating-point precision issues
     decimal.getcontext().prec = decimal_limit + 1  # Additional precision to ensure rounding
     if num_to_check == 0:  # Avoid division by zero error
-        return decimal.Decimal(0)
+        return decimal.Decimal('0.0')
 
     # Calculate the inversion
     inversion_result = decimal.Decimal(1) / decimal.Decimal(num_to_check)
 
-    # Limit the decimal places
-    quantize_format = decimal.Decimal('1.' + '0' * decimal_limit)  # Example: '1.000' for 3 decimal places
-    limited_result = inversion_result.quantize(quantize_format, rounding=decimal.ROUND_DOWN)
+    # Convert the result to a string
+    result_str = str(inversion_result)
 
-    return limited_result
+    # Find the decimal point
+    if '.' in result_str:
+        integer_part, decimal_part = result_str.split('.')
+        # Trim the decimal part to the desired length
+        trimmed_decimal_part = decimal_part[:decimal_limit]
+        # Combine the integer part and the trimmed decimal part
+        trimmed_result = integer_part + '.' + trimmed_decimal_part
+    else:
+        # If there's no decimal part, return the integer part as is
+        trimmed_result = result_str
+
+    return decimal.Decimal(trimmed_result)
 
 def get_decimal_count(num):
     num_str = str(num)
@@ -60,6 +70,17 @@ def get_args():
 def main():
     args = get_args()
 
+    if args.single_check:
+        print("Checking single entry...")
+        num_to_check = args.single_check
+        inversion_num = get_inversion(num_to_check)
+        if is_finite(inversion_num):
+            print(f"{green}{num_to_check:,}: {inversion_num}{reset}")
+        else:
+            print(f"{red}{num_to_check:,}: {inversion_num}{reset}")
+        return
+
+    print(f"Decimal limit set to {cyan}{decimal_limit}{reset} decimal places.\n")
     if args.show_all:
         print(f"Showing {cyan}ALL{reset} numbers between the range of {min:,} and {max:,}\n")
     else:
