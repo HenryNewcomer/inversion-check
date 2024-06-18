@@ -6,7 +6,7 @@ import decimal
 
 min = 0
 max = 100 # TODO: Change to 20_000
-decimal_limit = 10
+decimal_limit = 20
 
 # Terminal foreground colors
 red     = "\033[31m"
@@ -17,6 +17,9 @@ magenta = "\033[35m"
 cyan    = "\033[36m"
 white   = "\033[37m"
 reset   = "\033[0m"
+
+def check_for_repeating_decimal(num):
+    pass
 
 def get_inversion(num_to_check):
     # Set the precision to a higher value to avoid floating-point precision issues
@@ -60,7 +63,7 @@ def is_finite(num):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('single_check', type=int, nargs='?', help='Check a specific number')
-    parser.add_argument('-all', '--show_all', action='store_true', default=False, help='Show all numbers, even if they are not finite')
+    parser.add_argument('-a', '--all', action='store_true', default=False, help='Show all numbers, even if they are not finite')
     parser.add_argument('-l', '--limit', type=int, help='The number of decimal places to check for repeating patterns')
     parser.add_argument('-m', '--min', type=int, help='The minimum number to check')
     parser.add_argument('-M', '--max', type=int, help='The maximum number to check')
@@ -80,8 +83,13 @@ def main():
             print(f"{red}{num_to_check:,}: {inversion_num}{reset}")
         return
 
+    if args.min:
+        min = args.min
+    if args.max:
+        max = args.max
+
     print(f"Decimal limit set to {cyan}{decimal_limit}{reset} decimal places.\n")
-    if args.show_all:
+    if args.all:
         print(f"Showing {cyan}ALL{reset} numbers between the range of {min:,} and {max:,}\n")
     else:
         print(f"Showing only the {cyan}valid{reset} numbers between the range of {min:,} and {max:,}\n")
@@ -92,7 +100,7 @@ def main():
         if is_finite(inversion_num):
             print(f"{green}{i:,}: {inversion_num}{reset}")
         else:
-            if args.show_all:
+            if args.all:
                 print(f"{red}{i:,}: {inversion_num}{reset}")
 
 if __name__ == '__main__':
