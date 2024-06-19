@@ -44,54 +44,93 @@ def check_for_repeating_decimals(num):
     # 3. If it is, set is_repeating to True and check if the next digit is the same as the second decimal digit. If it's not, set is_repeating to False
     # 4. If it is, set is_repeating_pattern to True and continue checking the pattern repeating these steps.
 
-    digits_so_far              = ""
-    # For the 0.3333 case:
-    is_repeating               = True
-    is_repeating_found         = False # The "ground truth"
-    is_repeating_count         = 0
-    repeats_required           = 5
-    # For the 0.123123 case:
-    is_repeating_pattern       = True
-    is_repeating_pattern_found = False # The "ground truth"
-    is_repeating_pattern_count = 0
-    size_of_repeating_pattern  = 0
-    pattern_repeats_required   = 2 # TODO: Make this dynamic based on the size of the currently assumed pattern
-
     decimals = str(num).split(".")[1]
+    digits_so_far = ""
+    # For the 0.3333-like cases:
+    is_repeating_single_digit = True
+    repeating_count = 0
+    repeats_required = 5 # Seems large enough to be very unlikely a false positive, but not so large that its position extends beyond the tail end of our limited window of digits.
+    # For the 0.123123-like cases:
+    keep_checking_for_repeating_patterns = True
+    #repeating_pattern_count = 0
+    #current_pattern_length = 0
+    quit_at_iteration = (len(decimals) - 1) / 2 # This is half of the decimal length (-1 due to the loop's 0-indexing)
+
+    print("decimals:", decimals) # TEMP
+
     # Loop backwards through the decimal digits (split)
     for i in range(len(decimals) - 1, 0, -1):
-        if is_repeating:
-            # Check if the current digit is the same as the next digit
-            next_digit = decimals[i - 1]
-            is_repeating = decimals[i] == next_digit
-            if is_repeating:
-                is_repeating_count += 1
-                if is_repeating_count >= repeats_required:
-                    is_repeating_found = True
-                    break # Exit the loop early since we found a "valid" pattern.
-        #is_repeating_pattern = if decimals[i] # FIXME
+        print(f"i: {i}")
+        next_digit = decimals[i - 1]
 
-    if is_repeating_found or is_repeating_pattern_found:
-        return True
+        ### Firstly, check for the 0.3333-like case:
+        if is_repeating_single_digit:
+            # Check if the current digit is the same as the next digit
+            is_repeating_single_digit = decimals[i] == next_digit
+            repeating_count += 1
+            if repeating_count >= repeats_required:
+                return True # Exit the loop early since we found what seems to be a valid pattern
+
+        ### Secondly, check for the 0.123123-like case:
+        if keep_checking_for_repeating_patterns:
+            if len(digits_so_far) > 1:
+                # Do the next several digits match the last pattern window's contents?
+                next_potential_pattern_match = decimals[i - len(digits_so_far) + 1:i + 1] # NOTE: This was tricky since I was going backwards. Thanks for the help, ChatGPT. :)
+                another_match_found = digits_so_far == next_potential_pattern_match
+
+                pattern_repeats_required = get_pattern_repeats_required(len(decimals), len(digits_so_far))
+
+                # TEMP
+                print(f"another_match_found: {another_match_found} - next poential pattern match: {next_potential_pattern_match}")
+
+                if another_match_found:
+                    required_matches_found = False
+                    # Instead of looping again, since we've found a pair of matching patterns already, just check the next N digits and compare again.
+                    # Loop through the number of pattern_repeats_required and see if that many matches are found (minus the pair we already have). (remember we're going backwards)
+                    # Check if the next X chars (length of current pattern) also match. Do this for as many times as needed based on the pattern_repeats_required value.
+                    for j in range(i - len(digits_so_far), i - (len(digits_so_far) * pattern_repeats_required), -len(digits_so_far)):
+                        # Check if the next X chars (length of current pattern) also match.
+                        next_potential_pattern_match = decimals[j - len(digits_so_far) + 1:j + 1]
+                        another_match_found = digits_so_far == next_potential_pattern_match
+                        if not another_match_found:
+                            break
+                    return True
+
+            #TEMP
+            print(f"digits_so_far: {digits_so_far} -- next {len(digits_so_far)}")
+
+            digits_so_far = str(decimals[i]) + digits_so_far # Remember we're going backwards, which is why we're appending it in reverse
+            print(f"Updated digits so far:  {digits_so_far}")
+
+        # Check if the next iteration count is no longer required
+        if i + 1 <= quit_at_iteration:
+            break
+
+        print() # TEMP
+
     return False
 
 def test_check_for_repeating_decimals():
     nums = {
-        0.333333333: True,
-        0.123123:    True,
-        0.123456789: False,
-        3.141592653: False,
-        0.666666667: False,
-        0.142857142857: True,
-        0.101010101: True,
-        0.987654321: False,
-        0.27182818284: False,
-        1.414213562: False,
-        0.8532323232323: True,
-        0.012344444: True,
-        2.718281828: False,
-        1.618033988: False,
+        decimal.Decimal('0.333333333'): True,
+        decimal.Decimal('0.123123'): True,
+        decimal.Decimal('0.123456789'): False,
+        decimal.Decimal('3.141592653'): False,
+        decimal.Decimal('0.666666667'): False,
+        decimal.Decimal('0.142857142857'): True,
+        decimal.Decimal('0.101010101'): True,
+        decimal.Decimal('0.987654321'): False,
+        decimal.Decimal('0.27182818284'): False,
+        decimal.Decimal('1.414213562'): False,
+        decimal.Decimal('0.8532323232323'): True,
+        decimal.Decimal('0.012344444'): True,
+        decimal.Decimal('0.0123444445'): False,
+        decimal.Decimal('2.718281828'): True,
+        decimal.Decimal('1.618033988'): False,
+        decimal.Decimal('0.99998888777766665555444433332222111100001'): False,
+        decimal.Decimal('0.123456789987654321123456789987654321'): True,
     }
+
     num_passed = 0
     num_failed = 0
 
@@ -99,12 +138,24 @@ def test_check_for_repeating_decimals():
         repeats = check_for_repeating_decimals(num)
         if repeats == expected:
             num_passed += 1
-            print(f"{green}PASS{reset}: {num} repeats: {repeats}")
+            print(f"{green}PASS{reset}: {num} repeats: {repeats}{reset}")
         else:
             num_failed += 1
-            print(f"{red}FAIL{reset}: {num} repeats: {repeats} (expected {expected})")
+            print(f"{red}FAIL{reset}: {num} repeats: {repeats} {red}(expected {expected}){reset}")
 
     print(f"\nTest Results: {green}{num_passed} passed{reset}, {red}{num_failed} failed{reset}")
+
+# How many digits are there? We should use that alongside the number of current pattern chars to calculate how many patterns we should require
+def get_pattern_repeats_required(decimal_length, current_pattern_length):
+    #print(f"decimal_length: {decimal_length}, current_pattern_length: {current_pattern_length}")
+
+    #########################################
+    # TODO: Implement this function's logic #
+    #########################################
+
+    TEMP_PLACEHOLDER = 2
+
+    return TEMP_PLACEHOLDER
 
 def get_inversion(num_to_check):
     global decimal_limit
@@ -169,7 +220,7 @@ def main():
 
     if args.single_check:
         print("Checking single entry...")
-        num_to_check = args.single_check
+        num_to_check = decimal.Decimal(args.single_check)
         inversion_num = get_inversion(num_to_check)
         if is_finite(inversion_num):
             print(f"{green}{num_to_check:,}: {inversion_num}{reset}")
