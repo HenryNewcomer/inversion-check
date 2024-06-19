@@ -1,12 +1,9 @@
-### Concerns:
-# - How to check for repeating decimals within the inversion? At what point do we consider something "repeating"?
-
 import argparse
 import decimal
 
 min = 0
-max = 100 # TODO: Change to 20_000
-decimal_limit = 20
+max = 100
+decimal_limit = 40
 
 # Terminal foreground colors
 red     = "\033[31m"
@@ -104,7 +101,6 @@ def test_check_for_repeating_decimals():
 
 # How many digits are there? We should use that alongside the number of current pattern chars to calculate how many patterns we should require
 def get_pattern_repeats_required(decimal_length, current_pattern_length):
-    #print(f"decimal_length: {decimal_length}, current_pattern_length: {current_pattern_length}")
 
     #########################################
     # TODO: Implement this function's logic #
@@ -163,7 +159,6 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('single_check', type=int, nargs='?', help='Check a specific number')
     parser.add_argument('-a', '--all', action='store_true', default=False, help='Show all numbers, even if they are not finite')
-    parser.add_argument('-l', '--limit', type=int, help='The number of decimal places to check for repeating patterns')
     parser.add_argument('-m', '--min', type=int, help='The minimum number to check')
     parser.add_argument('-M', '--max', type=int, help='The maximum number to check')
     parser.add_argument('-t', '--test', action='store_true', default=False, help='Run validation test against check_for_repeating_decimals()')
