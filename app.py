@@ -31,7 +31,7 @@ def check_for_repeating_decimals(num):
     # NOTE: Start backwards! We can just could how many of the "same" last digits there are (to be used for the 0.3333 case).
 
     # RULES:
-    # - How many of the same last digits in a row should be reuqired to consider it "repeating"?
+    # - How many of the same last digits in a row should be required to consider it "repeating"?
     #   Answer: 5?
     # - How many repeating sequences should be required to consider it "repeating" (FROM THE TAIL)?
     #   Answer: 2? Nah, it should depend on how many characters there are in the pattern (if there's a lot, maybe 2 will be enough),
@@ -44,8 +44,36 @@ def check_for_repeating_decimals(num):
     # 3. If it is, set is_repeating to True and check if the next digit is the same as the second decimal digit. If it's not, set is_repeating to False
     # 4. If it is, set is_repeating_pattern to True and continue checking the pattern repeating these steps.
 
+    digits_so_far              = ""
+    # For the 0.3333 case:
+    is_repeating               = True
+    is_repeating_found         = False # The "ground truth"
+    is_repeating_count         = 0
+    repeats_required           = 5
+    # For the 0.123123 case:
+    is_repeating_pattern       = True
+    is_repeating_pattern_found = False # The "ground truth"
+    is_repeating_pattern_count = 0
+    size_of_repeating_pattern  = 0
+    pattern_repeats_required   = 2 # TODO: Make this dynamic based on the size of the currently assumed pattern
+
+    decimals = str(num).split(".")[1]
     # Loop backwards through the decimal digits (split)
-    pass
+    for i in range(len(decimals) - 1, 0, -1):
+        if is_repeating:
+            # Check if the current digit is the same as the next digit
+            next_digit = decimals[i - 1]
+            is_repeating = decimals[i] == next_digit
+            if is_repeating:
+                is_repeating_count += 1
+                if is_repeating_count >= repeats_required:
+                    is_repeating_found = True
+                    break # Exit the loop early since we found a "valid" pattern.
+        #is_repeating_pattern = if decimals[i] # FIXME
+
+    if is_repeating_found or is_repeating_pattern_found:
+        return True
+    return False
 
 def test_check_for_repeating_decimals():
     nums = {
@@ -53,13 +81,30 @@ def test_check_for_repeating_decimals():
         0.123123:    True,
         0.123456789: False,
         3.141592653: False,
+        0.666666667: False,
+        0.142857142857: True,
+        0.101010101: True,
+        0.987654321: False,
+        0.27182818284: False,
+        1.414213562: False,
+        0.8532323232323: True,
+        0.012344444: True,
+        2.718281828: False,
+        1.618033988: False,
     }
+    num_passed = 0
+    num_failed = 0
+
     for num, expected in nums.items():
         repeats = check_for_repeating_decimals(num)
         if repeats == expected:
+            num_passed += 1
             print(f"{green}PASS{reset}: {num} repeats: {repeats}")
         else:
+            num_failed += 1
             print(f"{red}FAIL{reset}: {num} repeats: {repeats} (expected {expected})")
+
+    print(f"\nTest Results: {green}{num_passed} passed{reset}, {red}{num_failed} failed{reset}")
 
 def get_inversion(num_to_check):
     global decimal_limit
