@@ -155,6 +155,13 @@ def is_finite(num):
             result = False
     return result
 
+def save_to_file(collection):
+    filename = "finite_numbers.txt"
+    with open(filename, "w") as file:
+        for num in collection:
+            file.write(str(num) + "\n")
+    print(f"\n\n{green}Finite numbers saved to {filename} ✓{reset}")
+
 def get_args():
     """Command line arguments."""
     parser = argparse.ArgumentParser()
@@ -163,6 +170,7 @@ def get_args():
     parser.add_argument('-m', '--min', type=int, help='The minimum number to check')
     parser.add_argument('-M', '--max', type=int, help='The maximum number to check')
     parser.add_argument('-t', '--test', action='store_true', default=False, help='Run validation test against check_for_repeating_decimals()')
+    parser.add_argument('-s', '--save_to_file', nargs='?', const='normal', default=None, help='Save results to a text file. Optionally, specify "silence" refrain from printing to the terminal.')
     args = parser.parse_args()
     return args
 
@@ -191,19 +199,29 @@ def main():
         max = args.max
 
     print(f"Decimal limit set to {cyan}{decimal_limit}{reset} decimal places.\n")
-    if args.all:
-        print(f"Showing {cyan}ALL{reset} numbers between the range of {min:,} and {max:,}\n")
+
+    if args.save_to_file != "silence":
+        if args.all:
+            print(f"Showing {cyan}ALL{reset} numbers between the range of {min:,} and {max:,}\n")
+        else:
+            print(f"Showing only the {cyan}valid{reset} numbers between the range of {min:,} and {max:,}\n")
     else:
-        print(f"Showing only the {cyan}valid{reset} numbers between the range of {min:,} and {max:,}\n")
+        print(f"{cyan}Silently saving all numbers between the range of {green}{min:,}{cyan} and {green}{max:,}{cyan} to file...{reset}")
+
+    collection = []
 
     for i in range(min, max+1):
         # TODO: Check for any repeating patterns within the decimal places of the inversion
         inversion_num = get_inversion(i)
         if is_finite(inversion_num):
-            print(f"{green}{i:,}: {inversion_num}{reset}")
+            print(f"{green}{i:,}: {inversion_num}{reset}") if args.save_to_file != "silence" else None
+            collection.append(f"{i:,}: {inversion_num}")
         else:
             if args.all:
-                print(f"{red}{i:,}: {inversion_num}{reset}")
+                print(f"{red}{i:,}: {inversion_num}{reset}") if args.save_to_file != "silence" else None
+
+    if args.save_to_file:
+        save_to_file(collection)
 
 if __name__ == '__main__':
     os.system('clear')
