@@ -1,5 +1,6 @@
 import argparse
 import decimal
+import os
 
 min = 0
 max = 100
@@ -205,5 +206,5 @@ def main():
                 print(f"{red}{i:,}: {inversion_num}{reset}")
 
 if __name__ == '__main__':
-    print("\033c") # Quick call to clear terminal screen
+    os.system('clear')
     main()
