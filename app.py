@@ -152,7 +152,10 @@ def is_finite(num):
     if get_decimal_count(num) < decimal_limit:
         result = True
     else:
-        result = False
+        if check_for_repeating_decimals(num):
+            result = True
+        else:
+            result = False
     return result
 
 def get_args():
